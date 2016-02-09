@@ -79,7 +79,9 @@ class SwiftFlowRouterIntegrationTests: QuickSpec {
                     }
 
                     let routable = FakeRootRoutable()
-                    let _ = Router(store: store, rootRoutable: routable)
+                    let _ = Router(store: store, rootRoutable: routable) { state in
+                        return state.navigationState
+                    }
 
                     expect(routable.called).to(beFalse())
                 }
@@ -115,7 +117,10 @@ class SwiftFlowRouterIntegrationTests: QuickSpec {
                             }
                         }
 
-                        let _ = Router(store: store, rootRoutable: rootRoutable)
+                        let _ = Router(store: store, rootRoutable: rootRoutable) { state in
+                            return state.navigationState
+                        }
+
                     }
                 }
 
@@ -165,7 +170,10 @@ class SwiftFlowRouterIntegrationTests: QuickSpec {
                         }
 
                         let _ = Router(store: store, rootRoutable:
-                            FakeRootRoutable(injectedRoutable: fakeChildRoutable))
+                            FakeRootRoutable(injectedRoutable: fakeChildRoutable)) { state in
+                                return state.navigationState
+                        }
+
                     }
                 }
 
