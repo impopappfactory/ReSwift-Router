@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import ReSwift
+//import ReSwift
 
 public class Router<State: StateType>: StoreSubscriber {
 
