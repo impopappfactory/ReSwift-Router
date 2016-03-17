@@ -6,7 +6,7 @@
 //  Copyright © 2015 DigiTales. All rights reserved.
 //
 
-import ReSwift
+//import ReSwift
 
 /// Exports the type map needed for using ReSwiftRouter with a Recording Store
 public let typeMap: [String: StandardActionConvertible.Type] =
