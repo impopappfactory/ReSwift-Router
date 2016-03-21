@@ -6,7 +6,7 @@
 //  Copyright © 2015 DigiTales. All rights reserved.
 //
 
-import ReSwift
+//import ReSwift
 
 /** 
  The Navigation Reducer handles the state slice concerned with storing the current navigation
