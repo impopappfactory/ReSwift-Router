@@ -27,7 +27,9 @@ public class Router<State: StateType>: StoreSubscriber {
 
     public func newState(state: NavigationState) {
         let routingActions = Router.routingActionsForTransitionFrom(
-            lastNavigationState.route, newRoute: state.route)
+            lastNavigationState.route,
+            newRoute: state.route,
+            animated: state.changeRouteAnimated)
 
         routingActions.forEach { routingAction in
 
@@ -41,37 +43,37 @@ public class Router<State: StateType>: StoreSubscriber {
             dispatch_async(waitForRoutingCompletionQueue) {
                 switch routingAction {
 
-                case let .Pop(responsibleRoutableIndex, segmentToBePopped):
+                case let .Pop(responsibleRoutableIndex, segmentToBePopped, animated):
                     dispatch_async(dispatch_get_main_queue()) {
                         self.routables[responsibleRoutableIndex]
                             .popRouteSegment(
                                 segmentToBePopped,
-                                animated: state.changeRouteAnimated) {
+                                animated: animated) {
                                     dispatch_semaphore_signal(semaphore)
                         }
 
                         self.routables.removeAtIndex(responsibleRoutableIndex + 1)
                     }
 
-                case let .Change(responsibleRoutableIndex, segmentToBeReplaced, newSegment):
+                case let .Change(responsibleRoutableIndex, segmentToBeReplaced, newSegment, animated):
                     dispatch_async(dispatch_get_main_queue()) {
                         self.routables[responsibleRoutableIndex + 1] =
                             self.routables[responsibleRoutableIndex]
                                 .changeRouteSegment(
                                     segmentToBeReplaced,
                                     to: newSegment,
-                                    animated: state.changeRouteAnimated) {
+                                    animated: animated) {
                                         dispatch_semaphore_signal(semaphore)
                         }
                     }
 
-                case let .Push(responsibleRoutableIndex, segmentToBePushed):
+                case let .Push(responsibleRoutableIndex, segmentToBePushed, animated):
                     dispatch_async(dispatch_get_main_queue()) {
                         self.routables.append(
                             self.routables[responsibleRoutableIndex]
                                 .pushRouteSegment(
                                     segmentToBePushed,
-                                    animated: state.changeRouteAnimated) {
+                                    animated: animated) {
                                         dispatch_semaphore_signal(semaphore)
                             }
                         )
@@ -119,8 +121,10 @@ public class Router<State: StateType>: StoreSubscriber {
         return segment + 1
     }
 
-    static func routingActionsForTransitionFrom(oldRoute: Route,
-        newRoute: Route) -> [RoutingActions] {
+    static func routingActionsForTransitionFrom(
+        oldRoute: Route,
+        newRoute: Route,
+        animated: Bool) -> [RoutingActions] {
 
             var routingActions: [RoutingActions] = []
 
@@ -149,7 +153,8 @@ public class Router<State: StateType>: StoreSubscriber {
 
                 let popAction = RoutingActions.Pop(
                     responsibleRoutableIndex: routableIndexForRouteSegment(routeBuildingIndex - 1),
-                    segmentToBePopped: routeSegmentToPop
+                    segmentToBePopped: routeSegmentToPop,
+                    animated: false
                 )
 
                 routingActions.append(popAction)
@@ -162,7 +167,8 @@ public class Router<State: StateType>: StoreSubscriber {
             if oldRoute.count > newRoute.count {
                 let popAction = RoutingActions.Pop(
                     responsibleRoutableIndex: routableIndexForRouteSegment(routeBuildingIndex - 1),
-                    segmentToBePopped: oldRoute[routeBuildingIndex]
+                    segmentToBePopped: oldRoute[routeBuildingIndex],
+                    animated: false
                 )
 
                 routingActions.append(popAction)
@@ -175,7 +181,9 @@ public class Router<State: StateType>: StoreSubscriber {
                 let changeAction = RoutingActions.Change(
                     responsibleRoutableIndex: routableIndexForRouteSegment(commonSubroute),
                     segmentToBeReplaced: oldRoute[commonSubroute + 1],
-                    newSegment: newRoute[commonSubroute + 1])
+                    newSegment: newRoute[commonSubroute + 1],
+                    animated: false
+                )
 
                 routingActions.append(changeAction)
             }
@@ -191,11 +199,19 @@ public class Router<State: StateType>: StoreSubscriber {
 
                 let pushAction = RoutingActions.Push(
                     responsibleRoutableIndex: routableIndexForRouteSegment(routeBuildingIndex),
-                    segmentToBePushed: routeSegmentToPush
+                    segmentToBePushed: routeSegmentToPush,
+                    animated: false
                 )
 
                 routingActions.append(pushAction)
                 routeBuildingIndex++
+            }
+
+            // now make only the last action animated
+            if routingActions.last != nil {
+                let lastAction = routingActions.removeLast()
+                let lastActionAnimated = lastAction.routingActionOverridingAnimated(animated)
+                routingActions.append(lastActionAnimated)
             }
 
             return routingActions
@@ -206,8 +222,20 @@ public class Router<State: StateType>: StoreSubscriber {
 func ReSwiftRouterStuck() {}
 
 enum RoutingActions {
-    case Push(responsibleRoutableIndex: Int, segmentToBePushed: RouteElementIdentifier)
-    case Pop(responsibleRoutableIndex: Int, segmentToBePopped: RouteElementIdentifier)
+    case Push(responsibleRoutableIndex: Int, segmentToBePushed: RouteElementIdentifier, animated: Bool)
+    case Pop(responsibleRoutableIndex: Int, segmentToBePopped: RouteElementIdentifier, animated: Bool)
     case Change(responsibleRoutableIndex: Int, segmentToBeReplaced: RouteElementIdentifier,
-                    newSegment: RouteElementIdentifier)
+                    newSegment: RouteElementIdentifier, animated: Bool)
+
+    func routingActionOverridingAnimated(animatedOverride: Bool) -> RoutingActions
+    {
+        switch self {
+        case let .Push(responsibleRoutableIndex, segmentToBePushed, _):
+            return .Push(responsibleRoutableIndex: responsibleRoutableIndex, segmentToBePushed: segmentToBePushed, animated: animatedOverride)
+        case let .Pop(responsibleRoutableIndex, segmentToBePopped, _):
+            return .Pop(responsibleRoutableIndex: responsibleRoutableIndex, segmentToBePopped: segmentToBePopped, animated: animatedOverride)
+        case let .Change(responsibleRoutableIndex, segmentToBeReplaced, newSegment, _):
+            return .Change(responsibleRoutableIndex: responsibleRoutableIndex, segmentToBeReplaced: segmentToBeReplaced, newSegment: newSegment, animated: animatedOverride)
+        }
+    }
 }
