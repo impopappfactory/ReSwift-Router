@@ -7,13 +7,14 @@
 //
 
 public typealias RoutingCompletionHandler = () -> Void
+public typealias RoutingCompletionHandlerWithNewRoutable = (newRoutable: Routable) -> Void
 
 public protocol Routable {
 
     func pushRouteSegment(
         routeElementIdentifier: RouteElementIdentifier,
         animated: Bool,
-        completionHandler: RoutingCompletionHandler) -> Routable
+        completionHandler: RoutingCompletionHandlerWithNewRoutable)
 
     func popRouteSegment(
         routeElementIdentifier: RouteElementIdentifier,
@@ -24,7 +25,7 @@ public protocol Routable {
         from: RouteElementIdentifier,
         to: RouteElementIdentifier,
         animated: Bool,
-        completionHandler: RoutingCompletionHandler) -> Routable
+        completionHandler: RoutingCompletionHandlerWithNewRoutable)
 
 }
 
