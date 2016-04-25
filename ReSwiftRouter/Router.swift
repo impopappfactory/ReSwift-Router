@@ -30,7 +30,7 @@ public class Router<State: StateType>: StoreSubscriber {
             lastNavigationState.route,
             newRoute: state.route,
             animated: state.changeRouteAnimated))
-            .sequentialGroupBy { _ in NSUUID().UUIDString }// $0.isAnimated } // doesn't work as expected yet
+            .sequentialGroupBy { _ in NSUUID().UUIDString } //{ $0.isAnimated ? NSUUID().hashValue/*execute animated actions one-by-one*/ : Int($0.isAnimated)/*group non-animated operations into batches*/ } // doesn't work as expected yet
             .toArray()
 
         routingActionsGroupedByAnimatedStatus.forEach { group in
