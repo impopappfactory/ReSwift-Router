@@ -121,7 +121,7 @@ public class Router<State: StateType>: StoreSubscriber {
             while largestCommonSubroute + 1 < newRoute.count &&
                   largestCommonSubroute + 1 < oldRoute.count &&
                   newRoute[largestCommonSubroute + 1] == oldRoute[largestCommonSubroute + 1] {
-                    largestCommonSubroute++
+                    largestCommonSubroute += 1
             }
 
             return largestCommonSubroute
@@ -172,7 +172,7 @@ public class Router<State: StateType>: StoreSubscriber {
                 )
 
                 routingActions.append(popAction)
-                routeBuildingIndex--
+                routeBuildingIndex -= 1
             }
 
             // This is the 1. case:
@@ -186,7 +186,7 @@ public class Router<State: StateType>: StoreSubscriber {
                 )
 
                 routingActions.append(popAction)
-                routeBuildingIndex--
+                routeBuildingIndex -= 1
             }
             // This is the 3. case:
             // "The new route has a different element after the commonSubroute, we need to replace
@@ -218,7 +218,7 @@ public class Router<State: StateType>: StoreSubscriber {
                 )
 
                 routingActions.append(pushAction)
-                routeBuildingIndex++
+                routeBuildingIndex += 1
             }
 
             // now make only the last action animated

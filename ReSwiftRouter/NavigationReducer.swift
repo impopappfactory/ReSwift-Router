@@ -31,22 +31,24 @@ public struct NavigationReducer {
         return state
     }
 
-    static func setRoute(var state: NavigationState, setRouteAction: SetRouteAction) -> NavigationState {
+    static func setRoute(initialState: NavigationState, setRouteAction: SetRouteAction) -> NavigationState {
+        var state = initialState
         state.route = setRouteAction.route
         state.changeRouteAnimated = setRouteAction.animated
-
         return state
     }
 
     static func setRouteSpecificData(
-        var state: NavigationState,
+        initialState: NavigationState,
         route: Route,
-        data: Any) -> NavigationState{
-            let routeHash = RouteHash(route: route)
+        data: Any) -> NavigationState
+    {
+        let routeHash = RouteHash(route: route)
 
-            state.routeSpecificState[routeHash] = data
+        var state = initialState
+        state.routeSpecificState[routeHash] = data
 
-            return state
+        return state
     }
 
 }
